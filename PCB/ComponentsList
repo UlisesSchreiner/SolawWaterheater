@@ -1,0 +1,25 @@
+	
+x1	Fuente 220v 5v 600mha	F1
+x1	varistor 	VR1
+x1	Fusible radial 1A 	F1
+x2 	Bornera 3 polos 20A	J1
+x1	Rele 5v 	RL1
+x2 	Diodo IN4007 	D1,D2
+x1	tira de pines 4	J2
+x1	tip122	Q3
+x1	difodo led 	D1
+x1	oscilador cristal 16mhz	X1
+x2 	capacitor ceramico 0.1	C3,C4
+x2 	tira de pines 2 polos	RST, J5
+x1 	capacitor 16v	C6
+x1	capacitor ceramico 100n	C6
+x1 	Transistor 2006	Q1
+x1	Regulador de voltaje 	REG
+x1 	ESP8266	ESP1
+x10 	Resistencia 10k 	
+x10 	Resistencia 1k	
+x1	Resistencia 15k	
+3x 	Resistencia 4.7 k 	
+x1	Pulsador 	
+x1      Atmega328p 
+x1      Socalo 328p
