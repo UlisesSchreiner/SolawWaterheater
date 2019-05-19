@@ -28,6 +28,8 @@ class Termotanque
   private:
           byte estadoRele;     // rele on/off 
           byte estadoConexion; // con/sin internet
+          byte estadoRSTcredentials = 0;
+          int contadorBotonPress = 0;
           int contadorRele;    // 
           int contadorTemperatura; 
           int contadorWDserial;    
@@ -61,10 +63,12 @@ class Termotanque
             
           void sendEstado() // enviar estado al ESP, suma WD serial
            {
+               String restCred = String(estadoRSTcredentials);
                String temp = String(temperaturaGlobal);
-               String data = "{ \"estTemp\": \"" + temp + "\"}";
+               String data = "{ \"estTemp\": \"" + temp + "\",\"estRestCred\":\"" + restCred + "\"}";
                WIFI.print(data);
                Serial.println(data);
+               if(estadoRSTcredentials == 1){estadoRSTcredentials = 0;} // retorna el reset de credenciales a 0
                sumarWDserial();
            }
            
@@ -80,7 +84,29 @@ class Termotanque
             }else{digitalWrite(RelePin, LOW);}
             contadorRele = 0;
            }
+
+           void sumarPress()
+           {
+            contadorBotonPress++;
+            if(contadorBotonPress > 3)
+            {
+              estadoRSTcredentials = 1;
+              for(int x = 0; x<10; x++)
+              {
+              digitalWrite(ledPin, HIGH);
+              delay(100);
+              digitalWrite(ledPin, LOW);
+              delay(100);
+              }  
+            }
+           }
+
+           void ResetPress()
+           {
+            contadorBotonPress = 0;
+           }
 };
+
 
 Termotanque T;
 
@@ -151,6 +177,10 @@ void cadaUnSegundo()
 {
   T.GetTemp();    // reser cont temp
   T.sendEstado(); // suma WD serial
+  if(digitalRead(pullSwuitch) == LOW)
+  {
+    T.sumarPress();
+  }else{T.ResetPress();}
   delay(1000);
 }
 
