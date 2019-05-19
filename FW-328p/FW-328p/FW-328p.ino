@@ -1,5 +1,4 @@
 
-
 #include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 #include <avr/wdt.h>
@@ -8,12 +7,15 @@
 #include <DallasTemperature.h>
 #include <OneWire.h>
 #include <EEPROM.h>
-SoftwareSerial WIFI(3, 2); // RX | TX
+
 
 #define ledPin 8
 #define DallasPin 9
 #define RelePin 13
 #define resetPin 10
+#define pullSwuitch 5
+
+SoftwareSerial WIFI(3, 2); // RX | TX
 
 OneWire oneWire(DallasPin);
 DallasTemperature sensors(&oneWire);
