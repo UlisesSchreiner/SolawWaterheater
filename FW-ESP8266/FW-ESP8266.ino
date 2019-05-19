@@ -81,6 +81,10 @@ class Termotanque
           byte horaMaximaUmbral2;
  public:
 
+        void restCred()
+        {
+          
+        }
         void GenerarJson()
         {
 
@@ -579,8 +583,14 @@ void leerSensores()
     char c = Serial.read();
     input = input + c;
   }
-   StaticJsonBuffer<50> jsonBuffer;
+   StaticJsonBuffer<100> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(input);
+  byte estRestCred = root["estRestCred"];
+  if(estRestCred == 1)
+  {
+    E.grabar(100, "TermoEnergy");
+    E.grabar(150, "12345678");
+  }
   float estadoTemperatura = root["estTemp"];
   if(estadoTemperatura != 0){
   T.setTemp(estadoTemperatura);
