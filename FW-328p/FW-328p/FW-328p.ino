@@ -92,8 +92,9 @@ void setup(void) {
 
   pinMode(ledPin, OUTPUT);
   pinMode(RelePin, OUTPUT);
-  pinMode(resetPin, OUTPUT); //reset
+  pinMode(resetPin, OUTPUT); 
   pinMode(DallasPin,INPUT);
+  pinMode(pullSwuitch,INPUT_PULLUP);
   digitalWrite(resetPin, LOW);
 
   CadaUnMinuto.onRun(cadaUnSegundo);
@@ -136,13 +137,14 @@ void loop() {
 
   
   if(T.GetContTemp() > 20){ wdt_enable(WDTO_30MS); while(1){};}
+  if(T.GetContRele() > 10){ wdt_enable(WDTO_30MS); while(1){};}
   if(T.GetContadorWDserial() > 5) //reser ESP
   {
       digitalWrite(resetPin, HIGH);
       delay(10);
       digitalWrite(resetPin, LOW);
   }
-  if(T.GetContRele() > 10){ wdt_enable(WDTO_30MS); while(1){};}
+  
 }
 
 void cadaUnSegundo()
