@@ -66,7 +66,7 @@ String htmlWeb;
 class Termotanque
 {
  private:
-          float estadoTemperatura = 40;
+          float estadoTemperatura = 130;
           int estadoRele = 2;
           int estadoConexion;
           byte estadoSistema;
@@ -80,6 +80,7 @@ class Termotanque
           byte tempObjUmbral2;
           byte horaMinimaUmbral2;
           byte horaMaximaUmbral2;
+          byte estadoContrasena;
  public:
 
         void restCred()
@@ -113,6 +114,7 @@ class Termotanque
  root["estCalefactor"] = estadoRele; 
  root["id"] = ESP.getChipId();
  root["ZonaHoraria"] = ZonaHoraria;
+ root["estPassChang"] = estadoContrasena;
     String output;
   root.printTo(output);
  htmlWeb = output;
@@ -134,6 +136,7 @@ estadoUmbral2 = EEPROM.read(257);  //
 tempObjUmbral2 = EEPROM.read(258); //
 horaMinimaUmbral2 = EEPROM.read(259); //
 horaMaximaUmbral2 = EEPROM.read(260); //
+estadoContrasena = EEPROM.read(262);
 //ZonaHoraria = EEPROM.read(261);
 EEPROM.end();
           
@@ -144,7 +147,7 @@ EEPROM.end();
 int hora = hour();
 int estadoReleActual = 2;
 //chek super umbrales
-if(estadoSuperumbrales == 1)
+if(estadoSuperumbrales == 1 && WiFi.status() == WL_CONNECTED)
 {
 
 //chek umbral 1 
@@ -311,6 +314,7 @@ if(APpass != "")
 {
   E.grabar(150, APpass);
   Serial.println(E.leer(150));
+  EEPROM.begin(500); EEPROM.write(262, 1); EEPROM.end();
 }
 if(APssid != "")
 {
@@ -421,7 +425,7 @@ int conection =  client.connect("", USERNAME, PASSWORD);
 
 void setup() {
   
-  //EEPROM.begin(168);
+ 
   Serial.begin(4800); 
  // E.leer(0).toCharArray(ssid, 50);
  // E.leer(50).toCharArray(password, 50);
@@ -463,7 +467,7 @@ void loop() {
 
     if (currentMillis - previousMillis >= 10000) { //envia la temperatura cada 10 segundos
     previousMillis = currentMillis;
-     //String msj = "{\"Dispositivo\":1,\"Nombre\":\"Termotanque01\",\"localIP\":\"192.168.1.7\",\"estadoConexion\":true,\"estadoTemperatura\":40,\"estadoSist\":1,\"tempObj\":50,\"estadoSupUmbrales\":255,\"estadoUmbral1\":255,\"tempObjUmbral1\":255,\"HoraMinimaUmbral1\":255,\"HoraMaximaUmbral1\":255,\"estadoUmbral2\":255,\"tempObjUmbral2\":255,\"HoraMinimaUmbral2\":255,\"HoraMaximaUmbral2\":255,\"hora\":\"23:30:59\",\"estCalefactor\":1,\"id\":9862124,\"ZonaHoraria\":-3}}"; //1 decimal
+     
     char k[(htmlWeb.length()+1)];
     htmlWeb.toCharArray(k, (htmlWeb.length()+1));
     client.publish(KEPT_ALIVE, k);
@@ -554,6 +558,7 @@ void leerSensores()
   {
     E.grabar(100, "TermoEnergy");
     E.grabar(150, "12345678");
+    EEPROM.begin(500); EEPROM.write(262, 0); EEPROM.end();
   }
   float estadoTemperatura = root["estTemp"];
   if(estadoTemperatura != 0){
