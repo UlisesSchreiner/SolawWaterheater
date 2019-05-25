@@ -1,10 +1,6 @@
 
 #include <ESP8266WiFi.h>
-//#include <WiFiClient.h>
-//#include <ESP8266WebServer.h>
-//#include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
-
 #include <Thread.h>
 #include <ThreadController.h>
 #include <NTPClient.h>
@@ -57,9 +53,9 @@ WiFiServer server(80);
 WiFiUDP ntpUDP;
 Thread ActualizacionEstado = Thread();
 Thread LeerSensores = Thread();
+Thread Mqtt = Thread();
 NTPClient timeClient(ntpUDP, poolServerName, zh);
-//NTPClient timeClient(ntpUDP, poolServerName, zh, 60000);
-  //NTPClient timeClient(ntpUDP);
+
   
 String htmlWeb;
 
@@ -90,85 +86,85 @@ class Termotanque
         void GenerarJson()
         {
 
-  String hora = String(hour()) + ":" + String(minute()) + ":" + String(second());
-  
- StaticJsonBuffer<400> jsonBuffer;
- JsonObject& root = jsonBuffer.createObject();
- root["Dispositivo"] = 1;
- root["Nombre"] = ssidAP;
- root["localIP"] = WiFi.localIP().toString();
- root["estadoConexion"] = WiFi.status();
- root["estadoTemperatura"] = estadoTemperatura;
- root["estadoSist"] = estadoSistema;
- root["tempObj"] = tempObj;
- root["estadoSupUmbrales"] = estadoSuperumbrales;
- root["estadoUmbral1"] =  estadoUmbral1;
- root["tempObjUmbral1"] = tempObjUmbral1;
- root["HoraMinimaUmbral1"] = horaMinimaUmbral1;
- root["HoraMaximaUmbral1"] = horaMaximaUmbral1;
- root["estadoUmbral2"] =  estadoUmbral2;
- root["tempObjUmbral2"] = tempObjUmbral2;
- root["HoraMinimaUmbral2"] = horaMinimaUmbral2;
- root["HoraMaximaUmbral2"] = horaMaximaUmbral2;
- root["hora"] = hora;
- root["estCalefactor"] = estadoRele; 
- root["id"] = ESP.getChipId();
- root["ZonaHoraria"] = ZonaHoraria;
- root["estPassChang"] = estadoContrasena;
-    String output;
-  root.printTo(output);
- htmlWeb = output;
-
+          String hora = String(hour()) + ":" + String(minute()) + ":" + String(second());
           
+         StaticJsonBuffer<400> jsonBuffer;
+         JsonObject& root = jsonBuffer.createObject();
+         root["Dispositivo"] = 1;
+         root["Nombre"] = ssidAP;
+         root["localIP"] = WiFi.localIP().toString();
+         root["estadoConexion"] = WiFi.status();
+         root["estadoTemperatura"] = estadoTemperatura;
+         root["estadoSist"] = estadoSistema;
+         root["tempObj"] = tempObj;
+         root["estadoSupUmbrales"] = estadoSuperumbrales;
+         root["estadoUmbral1"] =  estadoUmbral1;
+         root["tempObjUmbral1"] = tempObjUmbral1;
+         root["HoraMinimaUmbral1"] = horaMinimaUmbral1;
+         root["HoraMaximaUmbral1"] = horaMaximaUmbral1;
+         root["estadoUmbral2"] =  estadoUmbral2;
+         root["tempObjUmbral2"] = tempObjUmbral2;
+         root["HoraMinimaUmbral2"] = horaMinimaUmbral2;
+         root["HoraMaximaUmbral2"] = horaMaximaUmbral2;
+         root["hora"] = hora;
+         root["estCalefactor"] = estadoRele; 
+         root["id"] = ESP.getChipId();
+         root["ZonaHoraria"] = ZonaHoraria;
+         root["estPassChang"] = estadoContrasena;
+            String output;
+          root.printTo(output);
+         htmlWeb = output;
         }
 
         void actualizarVariables()
         {
-        EEPROM.begin(500);
-estadoSistema = EEPROM.read(250);
-tempObj = EEPROM.read(251);          
-estadoSuperumbrales = EEPROM.read(252);
-estadoUmbral1 = EEPROM.read(253);
-tempObjUmbral1 = EEPROM.read(254);
-horaMinimaUmbral1 = EEPROM.read(255);
-horaMaximaUmbral1 = EEPROM.read(256);
-estadoUmbral2 = EEPROM.read(257);  //
-tempObjUmbral2 = EEPROM.read(258); //
-horaMinimaUmbral2 = EEPROM.read(259); //
-horaMaximaUmbral2 = EEPROM.read(260); //
-estadoContrasena = EEPROM.read(262);
-//ZonaHoraria = EEPROM.read(261);
-EEPROM.end();
-          
+         EEPROM.begin(500);
+        estadoSistema = EEPROM.read(250);
+        tempObj = EEPROM.read(251);          
+        estadoSuperumbrales = EEPROM.read(252);
+        estadoUmbral1 = EEPROM.read(253);
+        tempObjUmbral1 = EEPROM.read(254);
+        horaMinimaUmbral1 = EEPROM.read(255);
+        horaMaximaUmbral1 = EEPROM.read(256);
+        estadoUmbral2 = EEPROM.read(257);  //
+        tempObjUmbral2 = EEPROM.read(258); //
+        horaMinimaUmbral2 = EEPROM.read(259); //
+        horaMaximaUmbral2 = EEPROM.read(260); //
+        estadoContrasena = EEPROM.read(262);
+        //ZonaHoraria = EEPROM.read(261);
+        EEPROM.end();
         }
+        
         void actualizarEstado()
         {
           
-int hora = hour();
-int estadoReleActual = 2;
-//chek super umbrales
-if(estadoSuperumbrales == 1 && WiFi.status() == WL_CONNECTED)
-{
+          int hora = hour();
+          int estadoReleActual = 2;
+          //chek super umbrales
+          if(estadoSuperumbrales == 1 && WiFi.status() == WL_CONNECTED)
+          {
+          
+              //chek umbral 1 
+              if(estadoUmbral1 == 1 && hora >= horaMinimaUmbral1 && hora <= horaMaximaUmbral1 && estadoTemperatura < tempObjUmbral1)
+              {
+                 estadoReleActual = 1;
+              }
+              
+              //chek umbral 2
+              if(estadoUmbral2 == 1 && hora >= horaMinimaUmbral2 && hora <= horaMaximaUmbral2 && estadoTemperatura < tempObjUmbral2)
+              {
+                 estadoReleActual = 1;
+              }
+          }
+          
+          //chek sistema
+          if(estadoSistema == 1 && estadoTemperatura < tempObj)
+          {
+            estadoReleActual = 1;
+          }
 
-//chek umbral 1 
-if(estadoUmbral1 == 1 && hora >= horaMinimaUmbral1 && hora <= horaMaximaUmbral1 && estadoTemperatura < tempObjUmbral1)
-{
-   estadoReleActual = 1;
-}
-//chek umbral 2
-if(estadoUmbral2 == 1 && hora >= horaMinimaUmbral2 && hora <= horaMaximaUmbral2 && estadoTemperatura < tempObjUmbral2)
-{
-   estadoReleActual = 1;
-}
-}
-//chek sistema
-if(estadoSistema == 1 && estadoTemperatura < tempObj)
-{
-  estadoReleActual = 1;
-}
-
-estadoRele = estadoReleActual;
-estadoConexion = WiFi.status();
+          estadoRele = estadoReleActual;
+          estadoConexion = WiFi.status();
 
         }
 
@@ -177,17 +173,21 @@ estadoConexion = WiFi.status();
         {
           estadoTemperatura = temp;
         }
+        
         void SetEstado()
-        { String estRele = String(estadoRele);
+        {
+          String estRele = String(estadoRele);
           String estConn = String(estadoConexion);
           String response = "{\"abc\":\"" + estRele + "\",\"estConnection\":\"" + estConn + "\"}";
         
           Serial.print(response);
         }
+        
         float getTemp()
         {
           return(estadoTemperatura);
         }
+        
         int setEstcal()
         {
           return estadoRele;
@@ -206,147 +206,148 @@ class Web
          String htmlWeb;
 
   public:
-          void ConectarWifi(){ 
-WiFi.begin(ssid, password);
-IPAddress ip(192,168,1,200);   
-IPAddress gateway(192,168,1,1);   
-IPAddress subnet(255,255,255,0);   
-//WiFi.config(ip, gateway, subnet);
-delay(5000);
-   for(int cont = 0; cont < 3 ; cont++)
-   {
-      if(WiFi.status() != WL_CONNECTED)
-      {
-      Serial.println("No pudo conectar");
-      WiFi.begin(ssid, password);
-      delay(2000);
-      }
-     if(WiFi.status() == WL_CONNECTED)
-     {
-        cont = 3;
-      }
-  }
-
-  if(WiFi.status() == WL_CONNECTED)
-     {
-      
-      Serial.println("se pudo conectar a: ssid");
-      Serial.println(WiFi.localIP());
-      Serial.println(WiFi.status());
-      WiFi.softAPdisconnect (true); 
-            
-     }else{
-      
-      WiFi.mode(WIFI_AP);
-      WiFi.softAP(ssidAP, passwordAP);
-      Serial.print("se inicio el AP en: ");
-      Serial.println(WiFi.softAPIP());
-      }
-
-      Serial.println("Red House: ");
-      Serial.println(WiFi.localIP());
-      Serial.println(WiFi.status());
-
-   
-      Serial.println("Red AP: ");
-      Serial.println(WiFi.softAPIP());
-}
+          void ConectarWifi()
+          { 
+            WiFi.begin(ssid, password);
+            IPAddress ip(192,168,1,200);   
+            IPAddress gateway(192,168,1,1);   
+            IPAddress subnet(255,255,255,0);   
+            //WiFi.config(ip, gateway, subnet);
+            delay(5000);
+               for(int cont = 0; cont < 3 ; cont++)
+               {
+                  if(WiFi.status() != WL_CONNECTED)
+                  {
+                    Serial.println("No pudo conectar");
+                    WiFi.begin(ssid, password);
+                    delay(2000);
+                  }
+                 if(WiFi.status() == WL_CONNECTED)
+                 {
+                    cont = 3;
+                  }
+               }
+              
+                if(WiFi.status() == WL_CONNECTED)
+                   {
+                    
+                    Serial.println("se pudo conectar a: ssid");
+                    Serial.println(WiFi.localIP());
+                    Serial.println(WiFi.status());
+                    WiFi.softAPdisconnect (true); 
+                          
+                   }else{
+                    
+                      WiFi.mode(WIFI_AP);
+                      WiFi.softAP(ssidAP, passwordAP);
+                      Serial.print("se inicio el AP en: ");
+                      Serial.println(WiFi.softAPIP());
+                    }
+              
+                    Serial.println("Red House: ");
+                    Serial.println(WiFi.localIP());
+                    Serial.println(WiFi.status());
+              
+                 
+                    Serial.println("Red AP: ");
+                    Serial.println(WiFi.softAPIP());
+         }
 
 
        void web(String crudo)
-{
-String msj2 = "";  
-String msj = "";
-int cont = 0;
-for(int x = 0; x < (crudo.length()); x++)
-  {
-    if(cont == 1){
-    msj = msj + crudo[x];
-    }
-    if(crudo[x] == '/'){
-      cont ++;
-    }
-    
-  }
+         {
+          String msj2 = "";  
+          String msj = "";
+          int cont = 0;
+          for(int x = 0; x < (crudo.length()); x++)
+            {
+              if(cont == 1){
+              msj = msj + crudo[x];
+              }
+              if(crudo[x] == '/'){
+                cont ++;
+              }
+              
+            }
+            
+            for(int x = 0; x < (msj.length()-6); x++)
+            {
+              //msj2 = msj2 + msj[x];
+              switch(msj[x]){
+                case '[': msj2 = msj2 + '{'; break;
+                case ']': msj2 = msj2  + '}'; break;
+                case '\'': msj2 = msj2  + '"'; break;
+                default: msj2 = msj2  + msj[x];
+               }
+              
+            }
+            Serial.println(msj2);
+            ParseJson(msj2);
+          }
+
+        void ParseJson(String json)
+         {
   
-  for(int x = 0; x < (msj.length()-6); x++)
-  {
-    //msj2 = msj2 + msj[x];
-    switch(msj[x]){
-      case '[': msj2 = msj2 + '{'; break;
-      case ']': msj2 = msj2  + '}'; break;
-      case '\'': msj2 = msj2  + '"'; break;
-      default: msj2 = msj2  + msj[x];
-     }
-    
-  }
-  Serial.println(msj2);
-  ParseJson(msj2);
-}
+           StaticJsonBuffer<300> jsonBuffer;
+            JsonObject& root = jsonBuffer.parseObject(json);
+            String ssid = root["ssid"];
+            String pass = root["pass"];
+            String APssid = root["APssid"];
+            String APpass = root["APpass"];
+          
+            int estadoSistema = root["estadoSist"];
+            int tempObj = root["tempObj"];
+          
+            int estadoSupUmbrales = root["estadoSupUmbrales"];
+            
+            int estadoUmbral1 = root["estadoUmbral1"];
+            int tempObjUmbral1 = root["tempObjUmbral1"];
+            int HoraMinimaUmbral1 = root["HoraMinimaUmbral1"];
+            int HoraMaximaUmbral1 = root["HoraMaximaUmbral1"];
+          
+            int estadoUmbral2 = root["estadoUmbral2"];
+            char tempObjUmbral2 = root["tempObjUmbral2"];
+            int HoraMinimaUmbral2 = root["HoraMinimaUmbral2"];
+            int HoraMaximaUmbral2 = root["HoraMaximaUmbral2"];
+            int res = root["123"];
+            int ZonaHoraria = root["ZonaHoraria"]; 
+          if(APpass != "")
+          {
+            E.grabar(150, APpass);
+            Serial.println(E.leer(150));
+            EEPROM.begin(500); EEPROM.write(262, 1); EEPROM.end();
+          }
+          if(APssid != "")
+          {
+            E.grabar(100, APssid);
+            Serial.println(E.leer(100));
+          }
+          if(pass != "")
+          {
+            E.grabar(50, pass);
+            Serial.println(E.leer(50));
+          }
+          if(ssid != "")
+          {
+           E.grabar(0, ssid);
+            Serial.print(E.leer(0)); 
+          }
 
-void ParseJson(String json)
-{
-  
- StaticJsonBuffer<300> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(json);
-  String ssid = root["ssid"];
-  String pass = root["pass"];
-  String APssid = root["APssid"];
-  String APpass = root["APpass"];
-
-  int estadoSistema = root["estadoSist"];
-  int tempObj = root["tempObj"];
-
-  int estadoSupUmbrales = root["estadoSupUmbrales"];
-  
-  int estadoUmbral1 = root["estadoUmbral1"];
-  int tempObjUmbral1 = root["tempObjUmbral1"];
-  int HoraMinimaUmbral1 = root["HoraMinimaUmbral1"];
-  int HoraMaximaUmbral1 = root["HoraMaximaUmbral1"];
-
-  int estadoUmbral2 = root["estadoUmbral2"];
-  char tempObjUmbral2 = root["tempObjUmbral2"];
-  int HoraMinimaUmbral2 = root["HoraMinimaUmbral2"];
-  int HoraMaximaUmbral2 = root["HoraMaximaUmbral2"];
-  int res = root["123"];
-  int ZonaHoraria = root["ZonaHoraria"]; 
-if(APpass != "")
-{
-  E.grabar(150, APpass);
-  Serial.println(E.leer(150));
-  EEPROM.begin(500); EEPROM.write(262, 1); EEPROM.end();
-}
-if(APssid != "")
-{
-  E.grabar(100, APssid);
-  Serial.println(E.leer(100));
-}
-if(pass != "")
-{
-  E.grabar(50, pass);
-  Serial.println(E.leer(50));
-}
-if(ssid != "")
-{
- E.grabar(0, ssid);
-  Serial.print(E.leer(0)); 
-}
-
-
-if(estadoSistema != 0){EEPROM.begin(500); EEPROM.write(250, estadoSistema); EEPROM.end();}
-if(tempObj > 20 && tempObj < 80){EEPROM.begin(500); EEPROM.write(251, tempObj); EEPROM.end();}
-if(estadoSupUmbrales != 0){EEPROM.begin(500); EEPROM.write(252, estadoSupUmbrales); EEPROM.end();}
-if(estadoUmbral1 != 0){EEPROM.begin(500); EEPROM.write(253, estadoUmbral1); EEPROM.end();}
-if(tempObjUmbral1 > 20 && tempObjUmbral1 < 80){EEPROM.begin(500); EEPROM.write(254, tempObjUmbral1); EEPROM.end();}
-if(HoraMinimaUmbral1 <= 24 && HoraMinimaUmbral1 >= 1){EEPROM.begin(500); EEPROM.write(255, HoraMinimaUmbral1); EEPROM.end();}
-if(HoraMaximaUmbral1 <= 24 && HoraMaximaUmbral1 >= 1){EEPROM.begin(500); EEPROM.write(256, HoraMaximaUmbral1); EEPROM.end();}
-if(estadoUmbral2 != 0){EEPROM.begin(500); EEPROM.write(257, estadoUmbral2); EEPROM.end();}
-if(tempObjUmbral2 > 20 && tempObjUmbral2 < 80){EEPROM.begin(500); EEPROM.write(258, tempObjUmbral2); EEPROM.end(); }
-if(HoraMinimaUmbral2 <= 24 && HoraMinimaUmbral2 >= 1){EEPROM.begin(500); EEPROM.write(259, HoraMinimaUmbral2); EEPROM.end();}
-if(HoraMaximaUmbral2 <= 24 && HoraMaximaUmbral2 >= 1){EEPROM.begin(500); EEPROM.write(260, HoraMaximaUmbral2); EEPROM.end();}
-if(res == 123){ESP.restart();}
-if(ZonaHoraria != 0 ){EEPROM.begin(500); EEPROM.write(261, ZonaHoraria); EEPROM.end();}
-T.actualizarVariables();
+          
+          if(estadoSistema != 0){EEPROM.begin(500); EEPROM.write(250, estadoSistema); EEPROM.end();}
+          if(tempObj > 20 && tempObj < 80){EEPROM.begin(500); EEPROM.write(251, tempObj); EEPROM.end();}
+          if(estadoSupUmbrales != 0){EEPROM.begin(500); EEPROM.write(252, estadoSupUmbrales); EEPROM.end();}
+          if(estadoUmbral1 != 0){EEPROM.begin(500); EEPROM.write(253, estadoUmbral1); EEPROM.end();}
+          if(tempObjUmbral1 > 20 && tempObjUmbral1 < 80){EEPROM.begin(500); EEPROM.write(254, tempObjUmbral1); EEPROM.end();}
+          if(HoraMinimaUmbral1 <= 24 && HoraMinimaUmbral1 >= 1){EEPROM.begin(500); EEPROM.write(255, HoraMinimaUmbral1); EEPROM.end();}
+          if(HoraMaximaUmbral1 <= 24 && HoraMaximaUmbral1 >= 1){EEPROM.begin(500); EEPROM.write(256, HoraMaximaUmbral1); EEPROM.end();}
+          if(estadoUmbral2 != 0){EEPROM.begin(500); EEPROM.write(257, estadoUmbral2); EEPROM.end();}
+          if(tempObjUmbral2 > 20 && tempObjUmbral2 < 80){EEPROM.begin(500); EEPROM.write(258, tempObjUmbral2); EEPROM.end(); }
+          if(HoraMinimaUmbral2 <= 24 && HoraMinimaUmbral2 >= 1){EEPROM.begin(500); EEPROM.write(259, HoraMinimaUmbral2); EEPROM.end();}
+          if(HoraMaximaUmbral2 <= 24 && HoraMaximaUmbral2 >= 1){EEPROM.begin(500); EEPROM.write(260, HoraMaximaUmbral2); EEPROM.end();}
+          if(res == 123){ESP.restart();}
+          if(ZonaHoraria != 0 ){EEPROM.begin(500); EEPROM.write(261, ZonaHoraria); EEPROM.end();}
+          T.actualizarVariables();
 }
 
 
@@ -372,55 +373,58 @@ String GetHtml()
 Web W;
 
 
-void callback(char* topic, byte* payload, unsigned int length) {
+      void callback(char* topic, byte* payload, unsigned int length) 
+      {
+      
+        String res = "";
+        Serial.print("Mensaje Recibido: [");
+        Serial.print(topic);
+        Serial.print("] ");
+        int cont = 0;
+        for (int i = 0; i < length; i++) {
+          char c = (char)payload[i];
+          if(c == '{' ){cont++;}
+          if(cont == 1){
+          res = res + c;
+          }
+          if(c == '}'){cont++;}
+        }
+        
+        
+        Serial.println(res);
+        W.ParseJson(res);
+        
+      }
 
-  String res = "";
-  Serial.print("Mensaje Recibido: [");
-  Serial.print(topic);
-  Serial.print("] ");
-  int cont = 0;
-  for (int i = 0; i < length; i++) {
-    char c = (char)payload[i];
-    if(c == '{' ){cont++;}
-    if(cont == 1){
-    res = res + c;
-    }
-    if(c == '}'){cont++;}
-  }
-  
-  
-  Serial.println(res);
-  W.ParseJson(res);
-  
-}
-
-void reconnect() {
-  
-  // Loop hasta que estamos conectados
-  
-    Serial.print("Intentando conexion MQTT...");
-    // Crea un ID de cliente al azar
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
-    // Attempt to connect
-
-    
-int conection =  client.connect("", USERNAME, PASSWORD);
-    
-    
-    if (conection) {
-      Serial.println("conectado");
-      client.subscribe(SUB_TOPIC);
-    } else {
-      Serial.print("fallo, rc=");
-      Serial.print(client.state());
-      // espera 5 segundos antes de reintentar
-      delay(5000);
-    }
-   
-    
-  
-}
+      void reconnect() 
+      {
+        
+        // Loop hasta que estamos conectados
+        
+          Serial.print("Intentando conexion MQTT...");
+          // Crea un ID de cliente al azar
+          String clientId = "ESP8266Client-";
+          clientId += String(random(0xffff), HEX);
+          // Attempt to connect
+      
+          
+        int conection =  client.connect("", USERNAME, PASSWORD);
+          
+          
+          if (conection) 
+          {
+            Serial.println("conectado");
+            client.subscribe(SUB_TOPIC);
+          } else {
+            Serial.print("fallo, rc=");
+            Serial.print(client.state());
+            // espera 5 segundos antes de reintentar
+            delay(500000);
+          }
+         
+          
+        
+      }
 
 
 void setup() {
@@ -446,6 +450,7 @@ String sub_topic = "TT/OUT/" + ID;
 
   ActualizacionEstado.onRun(actualizacionEstado);
   LeerSensores.onRun(leerSensores);
+  Mqtt.onRun(mqttTrhead);
   timeClient.begin();
   T.actualizarEstado();
  
@@ -455,26 +460,8 @@ timeClient.begin();
  }
 
 void loop() {
-////////////////////////////////////////
 
-   if (!client.connected()) {
-    reconnect();
-  }else{
- 
-  client.loop();
-
-  unsigned long currentMillis = millis();
-
-    if (currentMillis - previousMillis >= 10000) { //envia la temperatura cada 10 segundos
-    previousMillis = currentMillis;
-     
-    char k[(htmlWeb.length()+1)];
-    htmlWeb.toCharArray(k, (htmlWeb.length()+1));
-    client.publish(KEPT_ALIVE, k);
-  }
-  }
-///////////////////////////////
-  
+   Mqtt.run();
    ActualizacionEstado.run();
    LeerSensores.run();
  WiFiClient client = server.available();
@@ -567,4 +554,29 @@ void leerSensores()
   T.SetEstado();
   delay(10);
 }
+}
+
+void mqttTrhead()
+{
+  if(WiFi.status() == WL_CONNECTED)
+  {
+  
+     if (!client.connected()) {
+      reconnect();
+    }else{
+   
+    client.loop();
+  
+    unsigned long currentMillis = millis();
+  
+      if (currentMillis - previousMillis >= 10000) 
+        { //envia la temperatura cada 10 segundos
+        previousMillis = currentMillis;
+         
+        char k[(htmlWeb.length()+1)];
+        htmlWeb.toCharArray(k, (htmlWeb.length()+1));
+        client.publish(KEPT_ALIVE, k);
+      }
+    }
+  }
 }
