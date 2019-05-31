@@ -12,7 +12,7 @@
 #define ledPin 8
 #define DallasPin 9
 #define RelePin 13
-#define resetPin 10
+#define resetPin 4
 #define pullSwuitch 5
 
 SoftwareSerial WIFI(3, 2); // RX | TX
@@ -21,6 +21,7 @@ OneWire oneWire(DallasPin);
 DallasTemperature sensors(&oneWire);
 Thread CadaUnMinuto = Thread();
 Thread ControlRele = Thread();
+Thread Led = Thread();
 
 
 class Termotanque
@@ -36,6 +37,7 @@ class Termotanque
           float temperaturaGlobal;
 
   public:
+          bool GetConnectionStatus(){if(estadoConexion == 3){return true;}else{return false;}}
           void SumarContTemp(){contadorTemperatura ++;}
           int GetContTemp(){return contadorTemperatura;}
           void ResetWDserial(){contadorWDserial = 0;}
@@ -125,12 +127,13 @@ void setup(void) {
 
   CadaUnMinuto.onRun(cadaUnSegundo);
   ControlRele.onRun(controlRele);
+  Led.onRun(led);
 }
 
 void loop() {
   CadaUnMinuto.run();
   ControlRele.run();
-
+  Led.run();
 
   if(WIFI.available())
       {
@@ -190,4 +193,26 @@ void controlRele()
   T.SumarContTemp();   // suma cont temp
   T.sumarContRele();   // suma cont rele 
   delay(250);
+}
+
+void led()
+{
+
+if(T.GetConnectionStatus())
+{
+digitalWrite(ledPin, HIGH);
+delay(1000);
+digitalWrite(ledPin, LOW);
+delay(1000);  
+}else{
+  digitalWrite(ledPin, HIGH);
+delay(250);
+digitalWrite(ledPin, LOW);
+delay(250);
+digitalWrite(ledPin, HIGH);
+delay(250);
+digitalWrite(ledPin, LOW);
+delay(250);
+  }
+  
 }

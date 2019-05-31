@@ -9,12 +9,12 @@
 #include <PubSubClient.h>
 #include "Eeprom.cpp"
 
-//const char* ssid = "WiFi-Arnet-2jdz";
-//const char* password = "rxire3p8";
+const char* ssid = "WiFi-Arnet-2jdz";
+const char* password = "rxire3p8";
 
 
-char ssid[50];
-char password[50];
+//char ssid[50];
+//char password[50];
 char ssidAP[50];
 char passwordAP[50];
 //const char* poolServerName = "time.nist.gov";
@@ -23,19 +23,19 @@ const char* poolServerName = "time.nist.gov";
 int ZonaHoraria = -3;
 int zh = (ZonaHoraria* 3600);
 
-/*
+
 char   SERVER[50]   = "54.227.205.125"; //"m15.cloudmqtt.com"
 int    SERVERPORT   = 18129;
 char USERNAME[50] = "jnaokrrg";
 char PASSWORD[50] = "aMHg3lfP3r6i";   
-*/
 
-  
+
+/*  
 char   SERVER[50]   = "mqttcontrol.ddns.net"; //"m11.cloudmqtt.com"
 int    SERVERPORT   = 1883;
 char USERNAME[50] = "MOfDA813";
 char PASSWORD[50] = "123456789";   
-  
+*/
  
 
 char KEPT_ALIVE[50];
@@ -77,11 +77,16 @@ class Termotanque
           byte horaMinimaUmbral2;
           byte horaMaximaUmbral2;
           byte estadoContrasena;
+          bool mqttState = false;
  public:
 
-        void restCred()
+        bool getMqttState()
         {
-          
+          return mqttState; 
+        }
+        void setMqttStare(bool e)
+        {
+          mqttState = e;
         }
         void GenerarJson()
         {
@@ -419,7 +424,7 @@ Web W;
             Serial.print("fallo, rc=");
             Serial.print(client.state());
             // espera 5 segundos antes de reintentar
-            delay(500000);
+            //delay(500000);
           }
          
           
@@ -456,12 +461,21 @@ String sub_topic = "TT/OUT/" + ID;
  
 T.actualizarVariables(); 
 timeClient.begin();
+if(WiFi.status() == WL_CONNECTED)
+{
+reconnect();  
+if (client.connected())
+{
+  T.setMqttStare(true);
+}
+}
+
 
  }
 
 void loop() {
 
-   Mqtt.run();
+   Mqtt.run();   
    ActualizacionEstado.run();
    LeerSensores.run();
  WiFiClient client = server.available();
@@ -558,12 +572,9 @@ void leerSensores()
 
 void mqttTrhead()
 {
-  if(WiFi.status() == WL_CONNECTED)
-  {
+if(T.getMqttState() == true)
+{
   
-     if (!client.connected()) {
-      reconnect();
-    }else{
    
     client.loop();
   
@@ -577,6 +588,5 @@ void mqttTrhead()
         htmlWeb.toCharArray(k, (htmlWeb.length()+1));
         client.publish(KEPT_ALIVE, k);
       }
-    }
-  }
+}    
 }
