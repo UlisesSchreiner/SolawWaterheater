@@ -350,7 +350,7 @@ class Web
           if(tempObjUmbral2 > 20 && tempObjUmbral2 < 80){EEPROM.begin(500); EEPROM.write(258, tempObjUmbral2); EEPROM.end(); }
           if(HoraMinimaUmbral2 <= 24 && HoraMinimaUmbral2 >= 1){EEPROM.begin(500); EEPROM.write(259, HoraMinimaUmbral2); EEPROM.end();}
           if(HoraMaximaUmbral2 <= 24 && HoraMaximaUmbral2 >= 1){EEPROM.begin(500); EEPROM.write(260, HoraMaximaUmbral2); EEPROM.end();}
-          if(res == 123){ESP.restart();}
+          if(res == 123){ConectarWifi();}
           if(ZonaHoraria != 0 ){EEPROM.begin(500); EEPROM.write(261, ZonaHoraria); EEPROM.end();}
           T.actualizarVariables();
 }
