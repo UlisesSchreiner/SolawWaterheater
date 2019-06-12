@@ -557,6 +557,27 @@ void leerSensores()
   byte estRestCred = root["estRestCred"];
   if(estRestCred == 1)
   {
+
+
+
+    EEPROM.begin(500); 
+    EEPROM.write(250, 2);
+    EEPROM.write(251, 50);
+    EEPROM.write(252, 2);
+    EEPROM.write(253, 2);
+    EEPROM.write(254, 40);
+    EEPROM.write(255, 18);
+    EEPROM.write(256, 20);
+    EEPROM.write(257, 2);
+    EEPROM.write(258, 40);
+    EEPROM.write(259, 12);
+    EEPROM.write(260, 13);
+    EEPROM.write(261, -3);
+    EEPROM.write(262, 0);     
+    EEPROM.end();
+    
+    E.grabar(0, "");
+    E.grabar(50, "");
     E.grabar(100, "TermoEnergy");
     E.grabar(150, "12345678");
     EEPROM.begin(500); EEPROM.write(262, 0); EEPROM.end();
