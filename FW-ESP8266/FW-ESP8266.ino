@@ -62,7 +62,7 @@ String htmlWeb;
 class Termotanque
 {
  private:
-          float estadoTemperatura = 130;
+          float estadoTemperatura = -130;
           int estadoRele = 2;
           int estadoConexion;
           byte estadoSistema;
@@ -167,8 +167,11 @@ class Termotanque
           {
             estadoReleActual = 1;
           }
-
+          
+          if(estadoTemperatura < 80 && estadoTemperatura > 0) // check if the temperature is in the correct rangue.
+          {
           estadoRele = estadoReleActual;
+          }else {estadoRele = 2;}
           estadoConexion = WiFi.status();
 
         }
@@ -427,10 +430,18 @@ Web W;
             //delay(500000);
           }
          
-          
         
       }
 
+
+void RefreshCredentials() // this function reload the credentials.
+{/*
+  E.leer(0).toCharArray(ssid, 50);
+  E.leer(50).toCharArray(password, 50);
+  E.leer(100).toCharArray(ssidAP, 50);
+  E.leer(150).toCharArray(passwordAP, 50);
+  */
+}
 
 void setup() {
   
@@ -580,7 +591,7 @@ void leerSensores()
     E.grabar(50, "");
     E.grabar(100, "TermoEnergy");
     E.grabar(150, "12345678");
-    EEPROM.begin(500); EEPROM.write(262, 0); EEPROM.end();
+   
   }
   float estadoTemperatura = root["estTemp"];
   if(estadoTemperatura != 0){
