@@ -9,12 +9,12 @@
 #include <PubSubClient.h>
 #include "Eeprom.cpp"
 
-const char* ssid = "WiFi-Arnet-2jdz";
-const char* password = "rxire3p8";
+//const char* ssid = "WiFi-Arnet-2jdz";
+//const char* password = "rxire3p8";
 
 
-//char ssid[50];
-//char password[50];
+char ssid[50];
+char password[50];
 char ssidAP[50];
 char passwordAP[50];
 //const char* poolServerName = "time.nist.gov";
@@ -435,22 +435,23 @@ Web W;
 
 
 void RefreshCredentials() // this function reload the credentials.
-{/*
+{
   E.leer(0).toCharArray(ssid, 50);
   E.leer(50).toCharArray(password, 50);
   E.leer(100).toCharArray(ssidAP, 50);
   E.leer(150).toCharArray(passwordAP, 50);
-  */
+  
 }
 
 void setup() {
   
  
-  Serial.begin(4800); 
+  Serial.begin(4800);
+   RefreshCredentials();
  // E.leer(0).toCharArray(ssid, 50);
  // E.leer(50).toCharArray(password, 50);
-  E.leer(100).toCharArray(ssidAP, 50);
-  E.leer(150).toCharArray(passwordAP, 50);
+  //E.leer(100).toCharArray(ssidAP, 50);
+  //E.leer(150).toCharArray(passwordAP, 50);
  String ID = String(ESP.getChipId());
 String sub_topic = "TT/OUT/" + ID;
    String KeptAlive = "TT/IN/" + ID; 
@@ -591,6 +592,8 @@ void leerSensores()
     E.grabar(50, "");
     E.grabar(100, "TermoEnergy");
     E.grabar(150, "12345678");
+
+  RefreshCredentials();
    
   }
   float estadoTemperatura = root["estTemp"];
