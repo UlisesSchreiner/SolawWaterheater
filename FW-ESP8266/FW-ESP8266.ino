@@ -26,19 +26,19 @@ const char* poolServerName = "time.nist.gov";
 int ZonaHoraria = -3;
 int zh = (ZonaHoraria* 3600);
 
-/*
+
 char   SERVER[50]   = "54.227.205.125"; //"m15.cloudmqtt.com"
 int    SERVERPORT   = 18129;
 char USERNAME[50] = "jnaokrrg";
 char PASSWORD[50] = "aMHg3lfP3r6i";   
-*/
 
-  
+
+  /*
 char   SERVER[50]   = "mqttcontrol.ddns.net"; //"m11.cloudmqtt.com"
 int    SERVERPORT   = 1883;
 char USERNAME[50] = "MOfDA813";
 char PASSWORD[50] = "123456789";   
-  
+  */
  
 
 char KEPT_ALIVE[50];
