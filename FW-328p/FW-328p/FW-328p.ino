@@ -35,6 +35,8 @@ class Termotanque
           int contadorTemperatura; 
           int contadorWDserial;    
           float temperaturaGlobal;
+          byte contadorTemperaturas = 0;
+          float arrayTemperaturas[5];
 
   public:
           bool GetConnectionStatus(){if(estadoConexion == 3){return true;}else{return false;}}
@@ -49,6 +51,54 @@ class Termotanque
           void GetTemp() // obtiene la temp y rsetea el cont temp
           {
             sensors.requestTemperatures();
+            /*
+          
+
+                */
+
+            arrayTemperaturas[contadorTemperaturas] = sensors.getTempCByIndex(0);
+            
+            if(contadorTemperaturas < 5){contadorTemperaturas ++;} else {contadorTemperaturas = 0;}
+        
+              for(int x=0; x < 5; x++)
+              {
+                Serial.print(arrayTemperaturas[x]);
+                Serial.print("->");
+                Serial.println(contadorTemperaturas);
+              }
+                Serial.println(arrayTemperaturas[2]);
+
+            float temps[5];
+            
+            for(int x = 0; x < 5; x++)
+            {
+              temps[x] = arrayTemperaturas[x];
+            }
+
+            
+              float aux; 
+              for(int i = 0 ; i < 5 ; i++){
+              for(int x = 0; x < 5; x++)
+              {
+                 if( temps[x] > temps[x+1] )
+                 {
+                   aux = temps[x];
+                   temps[x] = temps[x+1];
+                   temps[x+1] = aux; 
+                 }
+
+               }
+              }
+              for(int x=0; x < 5; x++)
+              {
+                Serial.print("=>");
+                Serial.println(temps[x]);
+                
+              }
+                Serial.print("====>");
+                Serial.println(temps[2]);
+
+            
             temperaturaGlobal = sensors.getTempCByIndex(0);
             contadorTemperatura = 0;
           }

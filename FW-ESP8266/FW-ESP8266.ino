@@ -62,7 +62,7 @@ String htmlWeb;
 class Termotanque
 {
  private:
-          float estadoTemperatura = -130;
+          float estadoTemperatura = 99.1;
           int estadoRele = 2;
           int estadoConexion;
           byte estadoSistema;
