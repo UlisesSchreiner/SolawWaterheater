@@ -284,6 +284,7 @@ class Web
               switch(msj[x]){
                 case '[': msj2 = msj2 + '{'; break;
                 case ']': msj2 = msj2  + '}'; break;
+                case '%': msj2 = msj2  + ' '; break;
                 case '\'': msj2 = msj2  + '"'; break;
                 default: msj2 = msj2  + msj[x];
                }
@@ -296,7 +297,7 @@ class Web
         void ParseJson(String json)
          {
   
-           StaticJsonBuffer<300> jsonBuffer;
+           StaticJsonBuffer<400> jsonBuffer;
             JsonObject& root = jsonBuffer.parseObject(json);
             String ssid = root["ssid"];
             String pass = root["pass"];
